@@ -16,7 +16,7 @@ import java.util.HashMap;
  */
 public class DFA {
 
-    String dfa = "";
+    String print_text = "";
     FileManager file = new FileManager();
     PostFix converter = new PostFix();
     boolean foundSet = false;
@@ -31,6 +31,10 @@ public class DFA {
     ArrayList<String> sets_names = new ArrayList();
     ArrayList<State> states = new ArrayList<>();
     ArrayList<Transition> transitions = new ArrayList();
+
+    public String getPrintText() {
+        return print_text;
+    }
 
     public ArrayList<State> getStates() {
         return states;
@@ -50,11 +54,11 @@ public class DFA {
 
             saveSets();
             createDFA();
-            
-            this.dfa = getDFA();
-        }else{
+
+            this.print_text = getDFA();
+        } else {
             for (int i = 0; i < file.errors.size(); i++) {
-                System.out.println(file.errors.get(i));
+                this.print_text += file.errors.get(i) + "\n";
             }
         }
     }
@@ -688,22 +692,34 @@ public class DFA {
         }
         return -1;
     }
-    
-    public String getDFA(){
+
+    public String getDFA() {
         String print = "A = (E,Q,f,q0,F)\n";
-        print+= "E:\n";
+        print += "E:\n";
+        ArrayList<String> chars = new ArrayList();
         for (int i = 1; i < leafs.size(); i++) {
-            print += leafs.get(i) + "\n";
+            if (!chars.contains(leafs.get(i))) {
+                chars.add(leafs.get(i));
+            }
+        }
+        for (int i = 0; i < chars.size(); i++) {
+            print += chars.get(i) + "\n";
         }
         print += "\nQ:\n";
         for (int i = 0; i < states.size(); i++) {
-            print += states.get(i).getString() + "\n";
+            print += states.get(i).state_name + "\n";
         }
         print += "\nf:\n";
         for (int i = 0; i < transitions.size(); i++) {
             print += transitions.get(i).getString() + "\n";
         }
-        
+        print += "\nF:\n";
+        for (int i = 0; i < states.size(); i++) {
+            if (states.get(i).final_state) {
+                print += states.get(i).state_name + "\n";
+            }
+        }
+
         return print;
     }
 }

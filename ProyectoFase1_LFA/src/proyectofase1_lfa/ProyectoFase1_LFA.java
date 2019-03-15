@@ -20,11 +20,9 @@ public class ProyectoFase1_LFA {
     public static void main(String[] args) {
         // TODO code application logic here
         DFA dfa;
-        ArrayList<Transition> t;
-        ArrayList<State> s;
         //dfa = new DFA("a.b|c.d.(a.a|b.b)*", 1);
         dfa = new DFA("Len");
-        System.out.println(dfa.getDFA());
+        System.out.println(dfa.getPrintText());
     }
     
 }
