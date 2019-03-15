@@ -352,7 +352,9 @@ public class FileManager {
                                 error = "ERROR = line: " + (index + 1) + ", column: " + (position + 1) + ", the expression can't start with an operation symbol";
                                 break;
                             } else {
-                                chain = s_character;
+                                if (!s_character.equals("'") && !s_character.equals("(")) {
+                                    chain = s_character;
+                                }
                                 if (!(char_value == 39 || char_value == 40)) {
                                     if (!searchSet(chain)) {
                                         error = "ERROR = line: " + (index + 1) + ", column: " + (position + 1) + ", the name of the set doesn't exists";
@@ -376,7 +378,7 @@ public class FileManager {
                                 /*If it doesn't looks for a set it will work with the previous char:
                                 Validates if both are proper symbols of the regular expression and won't send an
                                 error only if the symbol is '('*/
-                                if (isExpressionSymbol2(s_character) && isExpressionSymbol2(prev)) {
+                                if (isExpressionSymbol2(s_character) && isExpressionSymbol2(prev) && (quote_counter % 2 == 0)) {
                                     if (!prev.equals("(") && !prev.equals(")")) {
                                         if (!s_character.equals("(") && !s_character.equals(")")) {
                                             error = "ERROR = line: " + (index + 1) + ", column: " + (position + 1) + ", it can't be 2 operation symbols next to each other";
@@ -415,12 +417,8 @@ public class FileManager {
                         if (position < split[index].length() - 1) {
                             if (String.valueOf(split[index].charAt(position + 1)).equals("'")) {
                                 quote_counter--;
-                            } else {
-                                if ((quote_counter % 2 == 0)) {
-                                    error = "ERROR = line: " + (index + 1) + ", column: " + (position + 1) + ", it can't be empty quotes";
-                                    break;
-                                }
-                            }
+                                chain = "";
+                            } 
                         } else {
                             if ((quote_counter % 2 == 0)) {
                                 if (!String.valueOf(split[index].charAt(position - 2)).equals("'")) {
@@ -461,11 +459,13 @@ public class FileManager {
 
     private boolean searchSet(String chain) {
         for (String value : sets) {
-            if (chain.equals(value.substring(0, chain.length()))) {
-                if (chain.equals(value)) {
-                    foundSet = true;
+            if (chain.length() <= value.length()) {
+                if (chain.equals(value.substring(0, chain.length()))) {
+                    if (chain.equals(value)) {
+                        foundSet = true;
+                    }
+                    return true;
                 }
-                return true;
             }
         }
         return false;

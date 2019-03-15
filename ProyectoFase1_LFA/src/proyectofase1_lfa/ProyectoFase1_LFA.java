@@ -21,7 +21,7 @@ public class ProyectoFase1_LFA {
         // TODO code application logic here
         DFA dfa;
         //dfa = new DFA("a.b|c.d.(a.a|b.b)*", 1);
-        dfa = new DFA("Len");
+        dfa = new DFA("Archivo1");
         System.out.println(dfa.getPrintText());
     }
     
