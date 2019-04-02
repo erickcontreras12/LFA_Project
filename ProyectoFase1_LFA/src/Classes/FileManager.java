@@ -165,6 +165,7 @@ public class FileManager {
             int position = 0;
             int quote_counter = 0;
             int point_counter = 0;
+            float opp_counter = 0;
             String error = "";
             String prev = "";
             String prev_value = "";
@@ -222,6 +223,8 @@ public class FileManager {
                             quote_counter++;
                         } else if (s_character.equals(".") && (quote_counter % 2 == 0)) {
                             point_counter++;
+                        } else if (s_character.equals("+") && (quote_counter % 2 == 0)) {
+                            opp_counter++;
                         }
 
                         if (quote_counter % 2 == 0) {
@@ -245,6 +248,7 @@ public class FileManager {
                                         }
                                         flag = true;
                                         point_counter = 0;
+                                        opp_counter++;
                                     } else {
                                         error = "ERROR = line: " + (index + 1) + ", column: " + (position + 1) + ", the range values only can contain 1 char";
                                     }
@@ -291,6 +295,9 @@ public class FileManager {
                             break;
                         } else if (!(point_counter % 2 == 0)) {
                             error = "ERROR = line: " + (index + 1) + ", there's missing a .";
+                            break;
+                        } else if (((quote_counter - 2) / opp_counter) != 2.00) {
+                            error = "ERROR = line: " + (index + 1) + ", there's missing a +";
                             break;
                         }
                     }
