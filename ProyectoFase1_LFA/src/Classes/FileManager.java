@@ -22,6 +22,7 @@ public class FileManager {
     String[] split = null;
     ArrayList<String> sets = new ArrayList();
     ArrayList<String> tokens_nums = new ArrayList();
+    ArrayList<String> actions_nums = new ArrayList();
     public ArrayList<String> errors = new ArrayList();
 
     public int getSets_mark() {
@@ -149,7 +150,7 @@ public class FileManager {
     private void makeValidations() {
         validateSets();
         validateTokens();
-        //validateActions();
+        validateActions();
 
     }
 
@@ -296,7 +297,7 @@ public class FileManager {
                         } else if (!(point_counter % 2 == 0)) {
                             error = "ERROR = line: " + (index + 1) + ", there's missing a .";
                             break;
-                        } else if (((quote_counter - 2) / opp_counter) != 2.00) {
+                        } else if (((quote_counter - 2) / opp_counter) != 2.00 && quote_counter != 0) {
                             error = "ERROR = line: " + (index + 1) + ", there's missing a +";
                             break;
                         }
@@ -467,6 +468,93 @@ public class FileManager {
                     }
                 } else {
                     error = "ERROR = line: " + (index + 1) + ", the identifier 'TOKEN' doesn't exists";
+                }
+            }
+
+            if (!error.equals("")) {
+                errors.add(error);
+            }
+
+            index++;
+            error = "";
+        }
+    }
+
+    private void validateActions() {
+        String error = "";
+        int index = actions_mark + 3;
+        while (index < split.length) {
+            if (split[index].equals("}")) {
+                break;
+            }
+
+            int position = 0;
+            boolean full_name = false;
+            boolean identifier = false;
+            boolean first = true;
+            String chain = "";
+            String prev = "";
+            String num = "";
+            int quote_counter = 0;
+
+            if (!split[index].equals("")) {
+                while (position < split[index].length()) {
+                    char character = split[index].charAt(position);
+                    String s_character = String.valueOf(character);
+                    int char_value = Integer.valueOf(character);
+
+                    if (!full_name) {
+                        if ((char_value >= 48 && char_value <= 57)) {
+                            num += s_character;
+                            identifier = true;
+                        } else if (s_character.equals("=")) {
+                            if (identifier) {
+                                if (!actions_nums.isEmpty()) {
+                                    if (actions_nums.contains(num)) {
+                                        error = "ERROR = line: " + (index + 1) + ", the number already exists";
+                                        break;
+                                    }
+                                }
+                                actions_nums.add(num);
+                                full_name = true;
+                            } else {
+                                error = "ERROR = line: " + (index + 1) + ", there's missing a identifier";
+                                break;
+                            }
+                        } else {
+                            error = "ERROR = line: " + (index + 1) + ", there's missing a point to start the actions";
+                            break;
+                        }
+                    } else {
+                        if (s_character.equals("'")) {
+                            quote_counter++;
+                        }
+
+                        if (first) {
+                            if (quote_counter != 1) {
+                                error = "ERROR = line: " + (index + 1) + ", the word should start with a quote";
+                                break;
+                            }
+                            first = false;
+                        } else {
+                            if (s_character.equals("'")) {
+                                if (chain.isEmpty() || chain.equals("")) {
+                                    error = "ERROR = line: " + (index + 1) + ", there's must be a word inside the quotes";
+                                    break;
+                                }
+                            } else {
+                                chain += s_character;
+                            }
+                        }
+                    }
+                    prev = s_character;
+                    position++;
+                    if (position == split[index].length()) {
+                        if (quote_counter % 2 != 0) {
+                            error = "ERROR = line: " + (index + 1) + ", there's missing a quote";
+                            break;
+                        }
+                    }
                 }
             }
 
