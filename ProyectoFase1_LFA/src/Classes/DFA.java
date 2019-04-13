@@ -25,6 +25,7 @@ public class DFA {
     String[] text;
     int sets_mark, tokens_mark, actions_mark;
     HashMap<String, ArrayList<String>> sets = new HashMap();
+    HashMap<String, Integer> actions = new HashMap();
     HashMap<Integer, String> leafs = new HashMap();
     HashMap<Integer, ArrayList<Integer>> follows = new HashMap();
     Deque<Node> stack = new ArrayDeque<>();
@@ -53,6 +54,7 @@ public class DFA {
             actions_mark = file.getActions_mark();
 
             saveSets();
+            saveActions();
             createDFA();
 
             this.print_text = getDFA();
@@ -172,6 +174,55 @@ public class DFA {
 
             sets.put(set_name, elements);
             sets_names.add(set_name);
+            index++;
+        }
+    }
+
+    private void saveActions() {
+        int index = actions_mark + 3;
+        while (index < text.length) {
+            if (text[index].equals("}")) {
+                break;
+            }
+
+            int position = 0;
+            boolean full_name = false;
+            boolean identifier = false;
+            String chain = "";
+            String num = "";
+            int quote_counter = 0;
+
+            if (!text[index].equals("")) {
+                while (position < text[index].length()) {
+                    char character = text[index].charAt(position);
+                    String s_character = String.valueOf(character);
+                    int char_value = Integer.valueOf(character);
+
+                    if (!full_name) {
+                        if ((char_value >= 48 && char_value <= 57)) {
+                            num += s_character;
+                            identifier = true;
+                        } else if (s_character.equals("=")) {
+                            if (identifier) {
+                                full_name = true;
+                            }
+                        } 
+                    }else{
+                        if (s_character.equals("'")) {
+                            quote_counter++;
+                        }
+                        
+                        if ((quote_counter % 2 != 0) && !s_character.equals("'")) {
+                            chain += s_character;
+                        }
+                    }
+                    
+                    position++;
+                    if (position == text[index].length()) {
+                        actions.put(chain, Integer.valueOf(num));
+                    }
+                }
+            }
             index++;
         }
     }
@@ -721,5 +772,13 @@ public class DFA {
         }
 
         return print;
+    }
+    
+    private void addText(String new_text){
+        print_text += new_text + "\n";
+    }
+    
+    private void initializeNewClass(){
+        print_text = "Package Classes";
     }
 }
