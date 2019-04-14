@@ -6,8 +6,11 @@
 package Classes;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -44,7 +47,7 @@ public class FileManager {
      * @param name name of the file
      * @return array of the lines
      */
-    public String[] readFile(String name) {
+    public String[] readAutomatonFile(String name) {
         File file = new File("C:\\Users\\Erick Contreras\\Desktop\\Pruebas\\" + name + ".txt");
 
         int count = 0;
@@ -96,6 +99,37 @@ public class FileManager {
         replaceSpaces();
         makeValidations();
         return split;
+    }
+
+    public boolean writeFile(String file_name, String content, String error, String root, String ext) {
+        File file = new File(root + file_name + "." + ext);
+        if (file.exists()) {
+            deleteFile(root + file_name + "." + ext);
+        }
+
+        try {
+            FileWriter fw = new FileWriter(file, true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write(content);
+            bw.close();
+            fw.close();
+
+            return true;
+        } catch (IOException ex) {
+            error = ex.getMessage();
+            return false;
+        }
+    }
+
+    private boolean deleteFile(String file_name) {
+        File file = new File(file_name);
+        try {
+            file.delete();
+            file.createNewFile();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**

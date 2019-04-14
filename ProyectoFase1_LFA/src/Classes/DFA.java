@@ -46,7 +46,7 @@ public class DFA {
     }
 
     public DFA(String file_name) {
-        text = file.readFile(file_name);
+        text = file.readAutomatonFile(file_name);
 
         if (file.errors.isEmpty()) {
             sets_mark = file.getSets_mark();
@@ -57,7 +57,13 @@ public class DFA {
             saveActions();
             createDFA();
 
-            this.print_text = getDFA();
+            initializeNewClass();
+            buildValidationMethod();
+            endNewClass();
+            file.writeFile("AutomatonValidator", print_text, "",
+                    "C:\\Users\\Erick Contreras\\Desktop\\", "java");
+            //print_text = trying();
+            //this.print_text = getDFA();
         } else {
             for (int i = 0; i < file.errors.size(); i++) {
                 this.print_text += file.errors.get(i) + "\n";
@@ -206,17 +212,17 @@ public class DFA {
                             if (identifier) {
                                 full_name = true;
                             }
-                        } 
-                    }else{
+                        }
+                    } else {
                         if (s_character.equals("'")) {
                             quote_counter++;
                         }
-                        
+
                         if ((quote_counter % 2 != 0) && !s_character.equals("'")) {
                             chain += s_character;
                         }
                     }
-                    
+
                     position++;
                     if (position == text[index].length()) {
                         actions.put(chain, Integer.valueOf(num));
@@ -250,7 +256,7 @@ public class DFA {
     private void createDFA() {
         getFullExpression();
         String postfixExpression = converter.infixToPostfix(full_expression);
-
+        //String postfixExpression = "DIGITODIGITO*.'\"'CHARSET.'\"'.'''.CHARSET.'''||'='|'<''>'.|'<'|'>'|'>''='.|'<''='.|'+'|'-'|'O''R'.|'*'|'A''N'.'D'.|'M''O'.'D'.|'D''I'.'V'.|'N''O'.'T'.|'(''*'.|'*'')'.|';'|'.'|'{'|'}'|'('|')'|'['|']'|'.''.'.|':'|','|':''='.|LETRALETRADIGITO|*.|#.";
         //postfixExpression += "#.";
         int position = 0;
         quote_counter = 0;
@@ -440,84 +446,94 @@ public class DFA {
         int index = tokens_mark + 1;
         while (index < actions_mark) {
             String chain = "";
-            String aux = "";
-            int position = 0;
-            for (int i = 0; i < text[index].length(); i++) {
-                if (String.valueOf(text[index].charAt(i)).equals("=")) {
-                    position = i + 1;
-                    break;
-                }
-            }
-            char character;
-            String s_character;
-            quote_counter = 0;
-            while (position < text[index].length()) {
-                character = text[index].charAt(position);
-                s_character = String.valueOf(character);
+            if (!text[index].equals("")) {
 
-                if (s_character.equals("'")) {
-                    quote_counter++;
+                if (text[index - 1].equals("")) {
+                    full_expression += ")|(";
                 }
 
-                chain += s_character;
-                aux += s_character;
+                String aux = "";
+                int position = 0;
+                for (int i = 0; i < text[index].length(); i++) {
+                    if (String.valueOf(text[index].charAt(i)).equals("=")) {
+                        position = i + 1;
+                        break;
+                    }
+                }
+                char character;
+                String s_character;
+                quote_counter = 0;
+                while (position < text[index].length()) {
+                    character = text[index].charAt(position);
+                    s_character = String.valueOf(character);
 
-                if ((quote_counter % 2 == 0)) {
-                    if (!searchSet(aux)) {
-                        if ((quote_counter > 0)) {
-                            if (position < text[index].length() - 1) {
-                                if (s_character.equals("'") && String.valueOf(text[index].charAt(position + 1)).equals("'")
-                                        && String.valueOf(text[index].charAt(position - 1)).equals("'")) {
-                                    quote_counter--;
-                                } else {
-                                    if (!isExpressionSymbol(s_character)) {
+                    if (s_character.equals("'")) {
+                        quote_counter++;
+                    }
 
-                                        if (!isExpressionSymbol(String.valueOf(text[index].charAt(position + 1)))) {
-                                            chain += ".";
-                                        }
+                    chain += s_character;
+                    aux += s_character;
 
+                    if ((quote_counter % 2 == 0)) {
+                        if (!searchSet(aux)) {
+                            if ((quote_counter > 0)) {
+                                if (position < text[index].length() - 1) {
+                                    if (s_character.equals("'") && String.valueOf(text[index].charAt(position + 1)).equals("'")
+                                            && String.valueOf(text[index].charAt(position - 1)).equals("'")) {
+                                        quote_counter--;
                                     } else {
-                                        if (!s_character.equals("(") && !s_character.equals("|")
-                                                && (String.valueOf(text[index].charAt(position + 1)).equals("'")
-                                                || String.valueOf(text[index].charAt(position + 1)).equals("("))) {
-                                            chain += ".";
+                                        if (!isExpressionSymbol(s_character)) {
+
+                                            if (!isExpressionSymbol(String.valueOf(text[index].charAt(position + 1)))) {
+                                                chain += ".";
+                                            }
+
+                                        } else {
+                                            if (!s_character.equals("(") && !s_character.equals("|")
+                                                    && (String.valueOf(text[index].charAt(position + 1)).equals("'")
+                                                    || String.valueOf(text[index].charAt(position + 1)).equals("("))) {
+                                                chain += ".";
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            aux = "";
-                        }
-                    } else {
-                        if (foundSet) {
-                            if (position < text[index].length() - 1) {
-                                if (!isExpressionSymbol(String.valueOf(text[index].charAt(position + 1)))) {
-                                    chain += ".";
-                                } else if (String.valueOf(text[index].charAt(position + 1)).equals("(")) {
-                                    chain += ".";
-                                }
-                                foundSet = false;
                                 aux = "";
+                            }
+                        } else {
+                            if (foundSet) {
+                                if (position < text[index].length() - 1) {
+                                    if (!isExpressionSymbol(String.valueOf(text[index].charAt(position + 1)))) {
+                                        chain += ".";
+                                    } else if (String.valueOf(text[index].charAt(position + 1)).equals("(")) {
+                                        chain += ".";
+                                    }
+                                    foundSet = false;
+                                    aux = "";
+                                }
                             }
                         }
                     }
+
+                    position++;
                 }
 
-                position++;
-            }
+                if (index == tokens_mark + 1) {
+                    full_expression += "((";
+                }
+                full_expression += chain;
 
-            if (index == tokens_mark + 1) {
-                full_expression += "((";
-            }
-            full_expression += chain;
+                if ((index + 1) < actions_mark) {
+                    if (!text[index + 1].equals("")) {
+                        full_expression += ")|(";
+                    }
+                }
 
-            if (index == actions_mark - 1) {
-                full_expression += ")).#";
-            } else {
-                full_expression += ")|(";
             }
 
             index++;
         }
+        full_expression += ")).#";
+        full_expression.replaceAll("|()", "");
     }
 
     /**
@@ -773,12 +789,113 @@ public class DFA {
 
         return print;
     }
-    
-    private void addText(String new_text){
+
+    private void addText(String new_text) {
         print_text += new_text + "\n";
     }
-    
-    private void initializeNewClass(){
-        print_text = "Package Classes";
+
+    private void initializeNewClass() {
+        print_text = "Package Classes \n\n";
+        print_text += "public class AutomatonValidator{";
+    }
+
+    private void endNewClass() {
+        print_text += "}";
+    }
+
+    private void buildValidationMethod() {
+        StringBuilder builder = new StringBuilder();
+        //Method begging
+        builder.append("public String validateEntries(String text){\n");
+        builder.append("String actual;\n");
+        builder.append("actual = ");
+        builder.append('"');
+        builder.append("q0");
+        builder.append('"');
+        builder.append(";\n");
+        builder.append("String actual_chain;\n");
+        builder.append("Character character;\n");
+        builder.append("switch(actual){\n");
+        for (State temp_state : states) {
+            builder.append("case ");
+            builder.append('"');
+            builder.append(temp_state.state_name);
+            builder.append('"');
+            builder.append(":\n");
+            int cont = 0;
+            for (Transition transition : transitions) {
+                if (temp_state.state_name.equals(transition.initial_state_name)) {
+
+                    if (cont == 0) {
+                        builder.append("if(");
+                    } else {
+                        builder.append("else if(");
+                    }
+
+                    //Validate if the move it's a set to put a value on the condition
+                    String condition = "";
+                    if (sets_names.contains(transition.move)) {
+                        condition = getSetCondition(transition.move);
+                    } else {
+                        //Validate if the move its a quote to add the \
+                        if (transition.move.equals("'")) {
+                            //Trabajar
+                            builder.append("character == '").append('\\').append('\'').append("'){\n");
+                        } else {
+                            condition = "character == '" + transition.move + "'";
+                        }
+                    }
+
+                    if (!condition.equals("")) {
+                        builder.append(condition).append("){\n");
+                    }
+
+                    builder.append("actual = ").append('"').append(transition.final_state_name).append('"').append(";\n");
+                    builder.append("}\n");
+                    cont++;
+                }
+            }
+            builder.append("break;\n");
+        }
+        builder.append("default:\nactual = ").append('"').append("q0").append('"').append(";\n}\n}\n");
+        
+
+        print_text += builder.toString();
+    }
+
+    private String getSetCondition(String set_name) {
+        ArrayList<String> values = new ArrayList<>();
+        values = sets.get(set_name);
+        String condition = "";
+        int cont = 0;
+        if (set_name.equals("CHARSET") || set_name.equals("charset")) {
+            int menor = 256;
+            int mayor = 0;
+            for (int i = 0; i < 10; i++) {
+                int num_value = Integer.valueOf(values.get(i).charAt(0));
+                if (num_value < menor) {
+                    menor = num_value;
+                }
+                if (num_value > mayor) {
+                    mayor = num_value;
+                }
+            }
+            condition = "char_value >= " + menor + " && char_value <= " + mayor;
+        } else {
+            for (int i = 0; i < values.size(); i++) {
+                if (i != values.size() - 1) {
+                    condition += "character == '" + values.get(i) + "' || ";
+                } else {
+                    condition += "character == '" + values.get(i) + "'";
+                }
+                cont++;
+                if (cont == 6) {
+                    condition += "\n";
+                    cont = 0;
+                }
+            }
+        }
+
+        return condition;
     }
 }
