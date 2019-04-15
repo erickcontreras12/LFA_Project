@@ -9,6 +9,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -26,6 +27,8 @@ public class DFA {
     int sets_mark, tokens_mark, actions_mark;
     HashMap<String, ArrayList<String>> sets = new HashMap();
     HashMap<String, Integer> actions = new HashMap();
+    HashMap<String, Integer> simple_tokens = new HashMap();
+    HashMap<String, Integer> complex_tokens = new HashMap();
     HashMap<Integer, String> leafs = new HashMap();
     HashMap<Integer, ArrayList<Integer>> follows = new HashMap();
     Deque<Node> stack = new ArrayDeque<>();
@@ -54,6 +57,7 @@ public class DFA {
             actions_mark = file.getActions_mark();
 
             saveSets();
+            saveTokens();
             saveActions();
             createDFA();
 
@@ -61,8 +65,9 @@ public class DFA {
             buildValidationMethod();
             endNewClass();
             file.writeFile("AutomatonValidator", print_text, "",
-                    "C:\\Users\\Erick Contreras\\Desktop\\", "java");
-            //print_text = trying();
+                    "C:\\Users\\Erick Contreras\\Desktop\\URL\\2019\\"
+                + "5to Semestre\\Lenguajes\\LFA_Project\\ProyectoFase1_LFA\\src\\Classes\\", "java");
+            
             //this.print_text = getDFA();
         } else {
             for (int i = 0; i < file.errors.size(); i++) {
@@ -182,6 +187,71 @@ public class DFA {
             sets_names.add(set_name);
             index++;
         }
+    }
+
+    private void saveTokens() {
+        int index = tokens_mark + 1;
+        while (index < actions_mark) {
+            if (!text[index].equals("")) {
+                int identifier = 0;
+                for (int i = 0; i < text[index].length(); i++) {
+                    if (text[index].charAt(i) == '=') {
+                        identifier = i;
+                        break;
+                    }
+                }
+
+                String expression = text[index].substring(identifier + 1);
+                int num = Integer.valueOf(text[index].substring(5, identifier));
+
+                if (containsExpressionSymbol(expression)) {
+                    complex_tokens.put(expression, num);
+                } else {
+                    String aux = "";
+                    for (int i = 0; i < expression.length(); i++) {
+                        if (expression.charAt(i) != '\'') {
+                            aux += expression.charAt(i);
+                        }
+                    }
+                    simple_tokens.put(aux, num);
+                }
+            }
+
+            index++;
+        }
+    }
+
+    private boolean containsExpressionSymbol(String expression) {
+        int position = 0;
+        int count_quotes = 0;
+        boolean hasQuotes = false;
+        if (expression.contains("'")) {
+            hasQuotes = true;
+        }
+        while (position < expression.length()) {
+            char character = expression.charAt(position);
+            String s_character = String.valueOf(character);
+            int char_value = Integer.valueOf(character);
+
+            if (char_value == 39) {
+                count_quotes++;
+            }
+
+            if (hasQuotes) {
+                if (count_quotes % 2 == 0) {
+                    if (isExpressionSymbol(s_character)) {
+                        return true;
+                    }
+                }
+            } else {
+                if (isExpressionSymbol(s_character)) {
+                    return true;
+                }
+            }
+
+            position++;
+        }
+        return false;
     }
 
     private void saveActions() {
@@ -790,13 +860,50 @@ public class DFA {
         return print;
     }
 
-    private void addText(String new_text) {
-        print_text += new_text + "\n";
+    private void initializeNewClass() {
+        print_text = "Package Classes; \n\n";
+        print_text += "import java.util.HashMap;\n\n";
+        print_text += "public class AutomatonValidator{\n";
+        print_text += "HashMap<String, Integer> actions = new HashMap();\n";
+        print_text += "HashMap<String, Integer> simple_tokens = new HashMap();\n";
+        print_text += "HashMap<String, Integer> complex_tokens = new HashMap();\n\n";
+
+        print_text += "public AutomatonValidator(){\n";
+        print_text += "getActions();\n";
+        print_text += "getSimpleTokens();\n";
+        print_text += "getComplexTokens();\n";
+        print_text += "}\n\n";
+
+        print_text += "private void getActions(){\n";
+        for (Map.Entry<String, Integer> entry : actions.entrySet()) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("actions.put(").append('"').append(entry.getKey()).append('"').append("," + entry.getValue()).append(");\n");
+            print_text += builder.toString();
+        }
+        print_text += "}\n\n";
+
+        print_text += "private void getSimpleTokens(){\n";
+        for (Map.Entry<String, Integer> entry : simple_tokens.entrySet()) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("simple_tokens.put(").append('"').append(entry.getKey()).append('"').append("," + entry.getValue()).append(");\n");
+            print_text += builder.toString();
+        }
+        print_text += "}\n\n";
+
+        print_text += "private void getComplexTokens(){\n";
+        for (Map.Entry<String, Integer> entry : complex_tokens.entrySet()) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("complex_tokens.put(").append('"').append(entry.getKey()).append('"').append("," + entry.getValue()).append(");\n");
+            print_text += builder.toString();
+        }
+        print_text += "}\n\n";
+
     }
 
-    private void initializeNewClass() {
-        print_text = "Package Classes \n\n";
-        print_text += "public class AutomatonValidator{";
+    public void pppp() {
+        for (Map.Entry<String, Integer> entry : actions.entrySet()) {
+            System.out.println("Clave: " + entry.getKey() + " Valor: " + entry.getValue());
+        }
     }
 
     private void endNewClass() {
@@ -807,14 +914,39 @@ public class DFA {
         StringBuilder builder = new StringBuilder();
         //Method begging
         builder.append("public String validateEntries(String text){\n");
+        builder.append("String result =").append('"').append('"').append(";\n");
         builder.append("String actual;\n");
-        builder.append("actual = ");
-        builder.append('"');
-        builder.append("q0");
-        builder.append('"');
-        builder.append(";\n");
-        builder.append("String actual_chain;\n");
-        builder.append("Character character;\n");
+        builder.append("actual = ").append('"').append("q0").append('"').append(";\n");
+        builder.append("int index = 0;\n");
+        builder.append("String actual_chain = ").append('"').append('"').append(";\n");
+        builder.append("while(index < text.length()){\n");
+        builder.append("char character = text.charAt(index);\n");
+        builder.append("int char_value = Integer.valueOf(character);\n\n");
+        builder.append("if (char_value == 32 || char_value == 9 || char_value == 10) {\n");
+        builder.append("if (!actual_chain.isEmpty()) {\n");
+        builder.append("if (actions.containsKey(actual_chain)) {\n");
+        builder.append("result += actual_chain + ").append('"').append(" = ").append('"');
+        builder.append(" + actions.get(actual_chain) + ").append('"').append("\\n").append('"').append(";\n");
+        builder.append("} else if (simple_tokens.containsKey(actual_chain)) {\n");
+        builder.append("result += actual_chain + ").append('"').append(" = ").append('"');
+        builder.append(" + simple_tokens.get(actual_chain) + ").append('"').append("\\n").append('"').append(";\n");
+        builder.append("} else {\n");
+        builder.append("result += actual_chain + ").append('"').append(" = E\\n").append('"').append(";\n");
+        builder.append("}\n");
+
+//        if (!actual_chain.isEmpty()) {
+//            if (actions.containsKey(actual_chain)) {
+//                result += actual_chain + "=" + actions.get(actual_chain) + "\n";
+//            } else if (simple_tokens.containsKey(actual_chain)) {
+//                result += actual_chain + "=" + actions.get(actual_chain) + "\n";
+//            } else {
+//                result += actual_chain + "=E\n";
+//            }
+//
+//            actual_chain = "";
+//        }
+        builder.append("actual_chain = ").append('"').append('"').append(";\n");
+        builder.append("}\n}else{\n");
         builder.append("switch(actual){\n");
         for (State temp_state : states) {
             builder.append("case ");
@@ -837,7 +969,7 @@ public class DFA {
                     if (sets_names.contains(transition.move)) {
                         condition = getSetCondition(transition.move);
                     } else {
-                        //Validate if the move its a quote to add the \
+                        //Validate if the move its a quote to add the slash \
                         if (transition.move.equals("'")) {
                             //Trabajar
                             builder.append("character == '").append('\\').append('\'').append("'){\n");
@@ -857,8 +989,12 @@ public class DFA {
             }
             builder.append("break;\n");
         }
-        builder.append("default:\nactual = ").append('"').append("q0").append('"').append(";\n}\n}\n");
-        
+        builder.append("default:\nactual = ").append('"').append("q0").append('"').append(";\n}\n");
+        builder.append("actual_chain += character;\n}\n");
+        builder.append("index++;\n");
+        builder.append("}\n");  //End of the while condition
+        builder.append("return result;\n");
+        builder.append("}\n");
 
         print_text += builder.toString();
     }
@@ -898,4 +1034,5 @@ public class DFA {
 
         return condition;
     }
+
 }
