@@ -66,9 +66,9 @@ public class DFA {
             endNewClass();
             file.writeFile("AutomatonValidator", print_text, "",
                     "C:\\Users\\Erick Contreras\\Desktop\\URL\\2019\\"
-                + "5to Semestre\\Lenguajes\\LFA_Project\\ProyectoFase1_LFA\\src\\Classes\\", "java");
-            
-            //this.print_text = getDFA();
+                    + "5to Semestre\\Lenguajes\\LFA_Project\\ProyectoFase1_LFA\\src\\Classes\\", "java");
+
+            this.print_text = getDFA();
         } else {
             for (int i = 0; i < file.errors.size(); i++) {
                 this.print_text += file.errors.get(i) + "\n";
@@ -861,17 +861,20 @@ public class DFA {
     }
 
     private void initializeNewClass() {
-        print_text = "Package Classes; \n\n";
-        print_text += "import java.util.HashMap;\n\n";
+        print_text = "package Classes; \n\n";
+        print_text += "import java.util.HashMap;\n";
+        print_text += "import java.util.ArrayList;\n\n";
         print_text += "public class AutomatonValidator{\n";
         print_text += "HashMap<String, Integer> actions = new HashMap();\n";
         print_text += "HashMap<String, Integer> simple_tokens = new HashMap();\n";
-        print_text += "HashMap<String, Integer> complex_tokens = new HashMap();\n\n";
+        print_text += "HashMap<String, Integer> complex_tokens = new HashMap();\n";
+        print_text += "ArrayList<String> final_states = new ArrayList();\n\n";
 
         print_text += "public AutomatonValidator(){\n";
         print_text += "getActions();\n";
         print_text += "getSimpleTokens();\n";
         print_text += "getComplexTokens();\n";
+        print_text += "getFinalStates();\n";
         print_text += "}\n\n";
 
         print_text += "private void getActions(){\n";
@@ -893,8 +896,25 @@ public class DFA {
         print_text += "private void getComplexTokens(){\n";
         for (Map.Entry<String, Integer> entry : complex_tokens.entrySet()) {
             StringBuilder builder = new StringBuilder();
-            builder.append("complex_tokens.put(").append('"').append(entry.getKey()).append('"').append("," + entry.getValue()).append(");\n");
+            String key = "";
+            for (int i = 0; i < entry.getKey().length(); i++) {
+                if (entry.getKey().charAt(i) == '"') {
+                    key += "\\";
+                }
+                key += entry.getKey().charAt(i);
+            }
+            builder.append("complex_tokens.put(").append('"').append(key).append('"').append("," + entry.getValue()).append(");\n");
             print_text += builder.toString();
+        }
+        print_text += "}\n\n";
+
+        print_text += "private void getFinalStates(){\n";
+        for (int i = 0; i < states.size(); i++) {
+            if (states.get(i).final_state) {
+                StringBuilder builder = new StringBuilder();
+                builder.append("final_states.add(").append('"').append(states.get(i).state_name).append('"').append(");\n");
+                print_text += builder.toString();
+            }
         }
         print_text += "}\n\n";
 
@@ -931,22 +951,46 @@ public class DFA {
         builder.append("result += actual_chain + ").append('"').append(" = ").append('"');
         builder.append(" + simple_tokens.get(actual_chain) + ").append('"').append("\\n").append('"').append(";\n");
         builder.append("} else {\n");
-        builder.append("result += actual_chain + ").append('"').append(" = E\\n").append('"').append(";\n");
-        builder.append("}\n");
+        builder.append("if(final_states.contains(actual)){\n");
+        builder.append("char aux = actual.charAt(0);\n");
+        builder.append("int aux_char_value = Integer.valueOf(aux);\n");
+        int new_count = 0;
+        int temp = 0;
+        for (Map.Entry<String, Integer> entry : complex_tokens.entrySet()) {
+            String start = getStartOfExpression(entry.getKey());
+            if (new_count == 0) {
+                temp = entry.getValue();
+                builder.append("if( ");
+            } else {
+                builder.append("else if( ");
+            }
 
-//        if (!actual_chain.isEmpty()) {
-//            if (actions.containsKey(actual_chain)) {
-//                result += actual_chain + "=" + actions.get(actual_chain) + "\n";
-//            } else if (simple_tokens.containsKey(actual_chain)) {
-//                result += actual_chain + "=" + actions.get(actual_chain) + "\n";
-//            } else {
-//                result += actual_chain + "=E\n";
-//            }
-//
-//            actual_chain = "";
-//        }
+            if (sets_names.contains(start)) {
+                builder.append(getSetCondition2(start));
+            } else {
+                builder.append("aux == '" + start.charAt(0) + "'");
+            }
+            builder.append("){\n");
+            builder.append("result += actual_chain + ").append('"').append(" = ").append('"').append(" + " + entry.getValue() + " + ")
+                    .append('"').append("\\n").append('"').append(";\n");
+            builder.append("}\n");
+            new_count++;
+        }
+        if (complex_tokens.size() > 0) {
+            builder.append("else{\n");
+            builder.append("result += actual_chain + ").append('"').append(" = ").append('"').append(" + " + temp + " + ")
+                    .append('"').append("\\n").append('"').append(";\n");
+            builder.append("}\n");
+        }
+
+        builder.append("}else{\n");
+        builder.append("result += actual_chain + ").append('"').append(" = E\\n").append('"').append(";\n");
+        builder.append("}\n}\n");
+
         builder.append("actual_chain = ").append('"').append('"').append(";\n");
-        builder.append("}\n}else{\n");
+        builder.append("}\n");
+        builder.append("actual = ").append('"').append("q0").append('"').append(";\n");
+        builder.append("}else{\n");
         builder.append("switch(actual){\n");
         for (State temp_state : states) {
             builder.append("case ");
@@ -982,14 +1026,18 @@ public class DFA {
                         builder.append(condition).append("){\n");
                     }
 
-                    builder.append("actual = ").append('"').append(transition.final_state_name).append('"').append(";\n");
-                    builder.append("}\n");
+                    builder.append("actual = ").append('"').append(transition.final_state_name).append('"').append(";\n}\n");
                     cont++;
                 }
             }
+            if (cont != 0) {
+                builder.append("else{\n");
+                builder.append("actual = ").append('"').append("q").append('"').append(";}\n");
+            }
+
             builder.append("break;\n");
         }
-        builder.append("default:\nactual = ").append('"').append("q0").append('"').append(";\n}\n");
+        builder.append("default:\nactual = ").append('"').append("q").append('"').append(";\n}\n");
         builder.append("actual_chain += character;\n}\n");
         builder.append("index++;\n");
         builder.append("}\n");  //End of the while condition
@@ -1033,6 +1081,66 @@ public class DFA {
         }
 
         return condition;
+    }
+
+    private String getSetCondition2(String set_name) {
+        ArrayList<String> values = new ArrayList<>();
+        values = sets.get(set_name);
+        String condition = "";
+        int cont = 0;
+        if (set_name.equals("CHARSET") || set_name.equals("charset")) {
+            int menor = 256;
+            int mayor = 0;
+            for (int i = 0; i < 10; i++) {
+                int num_value = Integer.valueOf(values.get(i).charAt(0));
+                if (num_value < menor) {
+                    menor = num_value;
+                }
+                if (num_value > mayor) {
+                    mayor = num_value;
+                }
+            }
+            condition = "aux_char_value >= " + menor + " && aux_char_value <= " + mayor;
+        } else {
+            for (int i = 0; i < values.size(); i++) {
+                if (i != values.size() - 1) {
+                    condition += "aux == '" + values.get(i) + "' || ";
+                } else {
+                    condition += "aux == '" + values.get(i) + "'";
+                }
+                cont++;
+                if (cont == 6) {
+                    condition += "\n";
+                    cont = 0;
+                }
+            }
+        }
+
+        return condition;
+    }
+
+    private String getStartOfExpression(String expression) {
+        String result = "";
+        boolean searchSet = true;
+        if (expression.charAt(0) == '\'') {
+            searchSet = false;
+        }
+        for (int i = 0; i < expression.length(); i++) {
+            if (searchSet) {
+                result += expression.charAt(i);
+                if (sets_names.contains(result)) {
+                    break;
+                }
+            } else {
+                if (expression.charAt(i) == '\'' && i != 0) {
+                    break;
+                }
+                if (expression.charAt(i) != '\'') {
+                    result += expression.charAt(i);
+                }
+            }
+        }
+        return result;
     }
 
 }

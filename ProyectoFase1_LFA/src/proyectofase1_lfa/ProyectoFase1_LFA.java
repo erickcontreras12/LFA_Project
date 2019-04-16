@@ -22,8 +22,7 @@ public class ProyectoFase1_LFA {
         DFA dfa;
         //dfa = new DFA("a.b|c.d.(a.a|b.b)*", 1);
         dfa = new DFA("Archivo 30");
-        //System.out.println(dfa.getPrintText());
-        dfa.pppp();
+        System.out.println(dfa.getPrintText());
     }
     
 }
