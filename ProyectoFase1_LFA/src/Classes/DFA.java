@@ -18,7 +18,7 @@ import java.util.Map;
 public class DFA {
 
     String print_text = "";
-    FileManager file = new FileManager();
+    public FileManager file = new FileManager();
     PostFix converter = new PostFix();
     boolean foundSet = false;
     int quote_counter = 0;
@@ -67,8 +67,6 @@ public class DFA {
             file.writeFile("AutomatonValidator", print_text, "",
                     "C:\\Users\\Erick Contreras\\Desktop\\URL\\2019\\"
                     + "5to Semestre\\Lenguajes\\LFA_Project\\ProyectoFase1_LFA\\src\\Classes\\", "java");
-
-            this.print_text = getDFA();
         } else {
             for (int i = 0; i < file.errors.size(); i++) {
                 this.print_text += file.errors.get(i) + "\n";
@@ -920,12 +918,6 @@ public class DFA {
 
     }
 
-    public void pppp() {
-        for (Map.Entry<String, Integer> entry : actions.entrySet()) {
-            System.out.println("Clave: " + entry.getKey() + " Valor: " + entry.getValue());
-        }
-    }
-
     private void endNewClass() {
         print_text += "}";
     }
@@ -952,7 +944,7 @@ public class DFA {
         builder.append(" + simple_tokens.get(actual_chain) + ").append('"').append("\\n").append('"').append(";\n");
         builder.append("} else {\n");
         builder.append("if(final_states.contains(actual)){\n");
-        builder.append("char aux = actual.charAt(0);\n");
+        builder.append("char aux = actual_chain.charAt(0);\n");
         builder.append("int aux_char_value = Integer.valueOf(aux);\n");
         int new_count = 0;
         int temp = 0;

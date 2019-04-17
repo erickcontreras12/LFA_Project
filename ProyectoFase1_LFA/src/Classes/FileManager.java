@@ -8,6 +8,7 @@ package Classes;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -47,8 +48,8 @@ public class FileManager {
      * @param name name of the file
      * @return array of the lines
      */
-    public String[] readAutomatonFile(String name) {
-        File file = new File("C:\\Users\\Erick Contreras\\Desktop\\Pruebas\\" + name + ".txt");
+    public String[] readAutomatonFile(String root) {
+        File file = new File(root);
 
         int count = 0;
         try {
@@ -100,6 +101,24 @@ public class FileManager {
         makeValidations();
         return split;
     }
+    
+    public String readFile(String root) throws FileNotFoundException {
+        String aux = "";
+        File file = new File(root);
+        BufferedReader reader = new BufferedReader(new FileReader(file));
+        try {
+            String line = reader.readLine();
+            while (line != null) {
+                aux += line + "\n";
+                line = reader.readLine();
+            }
+        } catch (Exception e) {
+
+        }
+
+        return aux;
+    }
+    
 
     public boolean writeFile(String file_name, String content, String error, String root, String ext) {
         File file = new File(root + file_name + "." + ext);
